@@ -1,0 +1,292 @@
+{
+  "projectInfo": {
+    "name": "Court Case Management System - Frontend",
+    "version": "1.0.0",
+    "description": "React-based CRUD application for managing court cases",
+    "type": "React Application",
+    "framework": "React 19.2",
+    "technologies": ["React", "Axios", "CSS3", "JavaScript ES6+"],
+    "targetBackend": "Spring Boot REST API",
+    "database": "H2 (via Spring Boot)"
+  },
+  "apiEndpoints": {
+    "baseUrl": "http://localhost:8080/api/courtcases",
+    "endpoints": [
+      {
+        "method": "GET",
+        "path": "/api/courtcases",
+        "description": "Fetch all court cases",
+        "response": [
+          {
+            "id": 1,
+            "caseNumber": "CASE-2024-001",
+            "categoryType": "Criminal",
+            "description": "Case description here",
+            "status": "Pending"
+          }
+        ]
+      },
+      {
+        "method": "GET",
+        "path": "/api/courtcases/{id}",
+        "description": "Fetch a specific court case by ID",
+        "pathParams": {"id": "number"},
+        "response": {
+          "id": 1,
+          "caseNumber": "CASE-2024-001",
+          "categoryType": "Criminal",
+          "description": "Case description here",
+          "status": "Pending"
+        }
+      },
+      {
+        "method": "POST",
+        "path": "/api/courtcases",
+        "description": "Create a new court case",
+        "requestBody": {
+          "caseNumber": "string (required)",
+          "categoryType": "string: 'Criminal' | 'Civil' (required)",
+          "description": "string, min 10 chars (required)",
+          "status": "string: 'Pending' | 'In Progress' | 'Closed' (required)"
+        },
+        "response": {
+          "id": 1,
+          "caseNumber": "CASE-2024-001",
+          "categoryType": "Criminal",
+          "description": "Case description here",
+          "status": "Pending"
+        }
+      },
+      {
+        "method": "PUT",
+        "path": "/api/courtcases/{id}",
+        "description": "Update an existing court case",
+        "pathParams": {"id": "number"},
+        "requestBody": {
+          "caseNumber": "string (required)",
+          "categoryType": "string: 'Criminal' | 'Civil' (required)",
+          "description": "string, min 10 chars (required)",
+          "status": "string: 'Pending' | 'In Progress' | 'Closed' (required)"
+        },
+        "response": {
+          "id": 1,
+          "caseNumber": "CASE-2024-001",
+          "categoryType": "Criminal",
+          "description": "Case description here",
+          "status": "Pending"
+        }
+      },
+      {
+        "method": "DELETE",
+        "path": "/api/courtcases/{id}",
+        "description": "Delete a court case by ID",
+        "pathParams": {"id": "number"},
+        "response": "No content (204)"
+      }
+    ]
+  },
+  "componentStructure": {
+    "CourtCaseList": {
+      "file": "src/components/CourtCaseList.js",
+      "type": "Functional Component",
+      "purpose": "Main component for displaying and managing court cases",
+      "state": {
+        "courtCases": "Array of court case objects",
+        "loading": "Boolean - loading state",
+        "error": "String - error message if any",
+        "showForm": "Boolean - form visibility toggle",
+        "editingCase": "Object or null - current editing case",
+        "searchTerm": "String - search filter"
+      },
+      "hooks": ["useState", "useEffect"],
+      "features": [
+        "Fetch all court cases",
+        "CRUD operations",
+        "Search functionality",
+        "Error handling",
+        "Loading states"
+      ]
+    },
+    "CourtCaseForm": {
+      "file": "src/components/CourtCaseForm.js",
+      "type": "Functional Component",
+      "purpose": "Form component for creating and editing court cases",
+      "props": {
+        "onSubmit": "Function - callback on form submission",
+        "onCancel": "Function - callback on cancel",
+        "initialData": "Object or null - case data for editing"
+      },
+      "state": {
+        "formData": "Object with fields: caseNumber, categoryType, description, status",
+        "errors": "Object with validation errors"
+      },
+      "hooks": ["useState", "useEffect"],
+      "features": [
+        "Form validation",
+        "Create and edit modes",
+        "Error display",
+        "Modal overlay"
+      ]
+    },
+    "courtCaseService": {
+      "file": "src/services/courtCaseService.js",
+      "type": "Service Module",
+      "purpose": "API communication layer",
+      "methods": [
+        "getAllCourtCases()",
+        "getCourtCaseById(id)",
+        "createCourtCase(data)",
+        "updateCourtCase(id, data)",
+        "deleteCourtCase(id)"
+      ],
+      "errorHandling": "Try-catch blocks with console logging"
+    }
+  },
+  "formFields": {
+    "caseNumber": {
+      "type": "text input",
+      "required": true,
+      "validation": "non-empty string",
+      "placeholder": "e.g., CASE-2024-001",
+      "errorMessage": "Case number is required"
+    },
+    "categoryType": {
+      "type": "select dropdown",
+      "required": true,
+      "options": ["Criminal", "Civil"],
+      "default": "Criminal"
+    },
+    "description": {
+      "type": "textarea",
+      "required": true,
+      "validation": "non-empty, minimum 10 characters",
+      "rows": 5,
+      "placeholder": "Enter case description (minimum 10 characters)",
+      "errorMessages": [
+        "Description is required",
+        "Description must be at least 10 characters"
+      ]
+    },
+    "status": {
+      "type": "select dropdown",
+      "required": true,
+      "options": ["Pending", "In Progress", "Closed"],
+      "default": "Pending"
+    }
+  },
+  "styling": {
+    "colors": {
+      "primary": "#1a237e",
+      "primary_dark": "#0d1654",
+      "secondary": "#455a64",
+      "success": "#2e7d32",
+      "danger": "#d32f2f",
+      "warning": "#e65100",
+      "info": "#1565c0",
+      "background": "#f5f5f5",
+      "border": "#e0e0e0"
+    },
+    "badges": {
+      "criminal": {
+        "background": "#ffcdd2",
+        "color": "#b71c1c"
+      },
+      "civil": {
+        "background": "#c8e6c9",
+        "color": "#1b5e20"
+      }
+    },
+    "status": {
+      "pending": {
+        "background": "#fff3e0",
+        "color": "#e65100"
+      },
+      "in_progress": {
+        "background": "#e3f2fd",
+        "color": "#1565c0"
+      },
+      "closed": {
+        "background": "#e8f5e9",
+        "color": "#2e7d32"
+      }
+    }
+  },
+  "documentation": {
+    "setupGuide": "SETUP_GUIDE.md",
+    "quickStart": "QUICK_START.md",
+    "backendReference": "BACKEND_REFERENCE.md",
+    "featuresGuide": "FEATURES_GUIDE.md",
+    "projectSummary": "PROJECT_SUMMARY.md",
+    "apiReference": "API_REFERENCE.json"
+  },
+  "fileStructure": {
+    "src": {
+      "components": ["CourtCaseList.js", "CourtCaseForm.js"],
+      "services": ["courtCaseService.js"],
+      "styles": ["CourtCaseList.css", "CourtCaseForm.css"],
+      "rootFiles": ["App.js", "App.css", "index.js", "index.css"]
+    }
+  },
+  "installationSteps": [
+    "1. Navigate to frontend directory",
+    "2. Run 'npm install'",
+    "3. Ensure Spring Boot backend is running on port 8080",
+    "4. Run 'npm start'",
+    "5. Application opens at http://localhost:3000"
+  ],
+  "features": {
+    "crud": {
+      "create": "Add new court cases",
+      "read": "View all court cases in table",
+      "update": "Edit existing court cases",
+      "delete": "Remove court cases"
+    },
+    "search": "Filter cases by case number or description",
+    "validation": "Form field validation with error messages",
+    "responsive": "Mobile, tablet, and desktop support",
+    "errorHandling": "User-friendly error messages",
+    "statusTracking": "Pending, In Progress, Closed states"
+  },
+  "caseAttributes": [
+    {
+      "name": "id",
+      "type": "number",
+      "required": false,
+      "description": "Auto-generated unique identifier"
+    },
+    {
+      "name": "caseNumber",
+      "type": "string",
+      "required": true,
+      "description": "Unique case identifier"
+    },
+    {
+      "name": "categoryType",
+      "type": "enum",
+      "required": true,
+      "values": ["Criminal", "Civil"],
+      "description": "Type of court case"
+    },
+    {
+      "name": "description",
+      "type": "string",
+      "required": true,
+      "minLength": 10,
+      "description": "Detailed case information"
+    },
+    {
+      "name": "status",
+      "type": "enum",
+      "required": true,
+      "values": ["Pending", "In Progress", "Closed"],
+      "description": "Current status of the case"
+    }
+  ],
+  "systemRequirements": {
+    "nodeVersion": "14.0.0 or higher",
+    "npmVersion": "6.0.0 or higher",
+    "backendPort": 8080,
+    "frontendPort": 3000,
+    "database": "H2 (via Spring Boot)"
+  }
+}

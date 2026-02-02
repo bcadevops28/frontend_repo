@@ -13,51 +13,57 @@ function App() {
   });
   const [editingId, setEditingId] = useState(null);
 
-  // Fetch cases
+  // ✅ Fetch cases (SAFE)
   useEffect(() => {
     fetch('http://localhost:8080/api/cases')
       .then(res => res.json())
-      .then(data => setCases(data))
-      .catch(err => console.error("Fetch error:", err));
+      .then(data => {
+        console.log("API response:", data); // 🔍 debug
+        if (Array.isArray(data)) {
+          setCases(data);
+        } else {
+          setCases([]); // prevent crash
+        }
+      })
+      .catch(err => {
+        console.error("Fetch error:", err);
+        setCases([]);
+      });
   }, []);
 
   // Handle form input
   const handleChange = (e) => {
-    setFormData({...formData, [e.target.name]: e.target.value});
+    setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
   // Submit new or updated case
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    if (editingId) {
-      // Update existing case
-      fetch(`http://localhost:8080/api/cases/${editingId}`, {
-        method: 'PUT',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify(formData)
-      })
+    const url = editingId
+      ? `http://localhost:8080/api/cases/${editingId}`
+      : 'http://localhost:8080/api/cases';
+
+    const method = editingId ? 'PUT' : 'POST';
+
+    fetch(url, {
+      method,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(formData)
+    })
       .then(res => res.json())
-      .then(updatedCase => {
-        setCases(cases.map(c => c.id === editingId ? updatedCase : c));
-        setEditingId(null);
+      .then(result => {
+        if (editingId) {
+          setCases(prev =>
+            prev.map(c => (c.id === editingId ? result : c))
+          );
+          setEditingId(null);
+        } else {
+          setCases(prev => [...prev, result]);
+        }
         resetForm();
       })
-      .catch(err => console.error("Update error:", err));
-    } else {
-      // Create new case
-      fetch('http://localhost:8080/api/cases', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify(formData)
-      })
-      .then(res => res.json())
-      .then(newCase => {
-        setCases([...cases, newCase]);
-        resetForm();
-      })
-      .catch(err => console.error("Create error:", err));
-    }
+      .catch(err => console.error("Save error:", err));
   };
 
   // Delete case
@@ -65,8 +71,10 @@ function App() {
     fetch(`http://localhost:8080/api/cases/${id}`, {
       method: 'DELETE'
     })
-    .then(() => setCases(cases.filter(c => c.id !== id)))
-    .catch(err => console.error("Delete error:", err));
+      .then(() => {
+        setCases(prev => prev.filter(c => c.id !== id));
+      })
+      .catch(err => console.error("Delete error:", err));
   };
 
   // Edit case
@@ -99,37 +107,76 @@ function App() {
       <h1>Court Case Management</h1>
 
       <form onSubmit={handleSubmit}>
-        <input name="caseTitle" placeholder="Case Title" value={formData.caseTitle} onChange={handleChange} />
-        <textarea name="description" placeholder="Description" value={formData.description} onChange={handleChange}></textarea>
-        <input name="defenderName" placeholder="Defender Name" value={formData.defenderName} onChange={handleChange} />
-        <input name="offenderName" placeholder="Offender Name" value={formData.offenderName} onChange={handleChange} />
+        <input
+          name="caseTitle"
+          placeholder="Case Title"
+          value={formData.caseTitle}
+          onChange={handleChange}
+          required
+        />
+
+        <textarea
+          name="description"
+          placeholder="Description"
+          value={formData.description}
+          onChange={handleChange}
+          required
+        />
+
+        <input
+          name="defenderName"
+          placeholder="Defender Name"
+          value={formData.defenderName}
+          onChange={handleChange}
+        />
+
+        <input
+          name="offenderName"
+          placeholder="Offender Name"
+          value={formData.offenderName}
+          onChange={handleChange}
+        />
+
         <select name="caseType" value={formData.caseType} onChange={handleChange}>
           <option value="NORMAL">Normal</option>
           <option value="CRIMINAL">Criminal</option>
         </select>
+
         <select name="status" value={formData.status} onChange={handleChange}>
           <option value="OPEN">Open</option>
           <option value="CLOSED">Closed</option>
         </select>
-        <button type="submit">{editingId ? "Update Case" : "Add Case"}</button>
+
+        <button type="submit">
+          {editingId ? "Update Case" : "Add Case"}
+        </button>
       </form>
 
       <div className="case-list">
         <h2>All Cases</h2>
-        {cases.map(c => (
-          <div key={c.id} className="case-card">
-            <div className="case-title">{c.caseTitle}</div>
-            <div className="case-meta">
-              Type: {c.caseType} | Status: {c.status}<br/>
-              Defender: {c.defenderName} | Offender: {c.offenderName}
+
+        {Array.isArray(cases) && cases.length === 0 && (
+          <p>No cases available</p>
+        )}
+
+        {Array.isArray(cases) &&
+          cases.map(c => (
+            <div key={c.id} className="case-card">
+              <div className="case-title">{c.caseTitle}</div>
+
+              <div className="case-meta">
+                Type: {c.caseType} | Status: {c.status}<br />
+                Defender: {c.defenderName} | Offender: {c.offenderName}
+              </div>
+
+              <p>{c.description}</p>
+
+              <div className="case-actions">
+                <button onClick={() => handleEdit(c)}>Edit</button>
+                <button onClick={() => handleDelete(c.id)}>Delete</button>
+              </div>
             </div>
-            <p>{c.description}</p>
-            <div className="case-actions">
-              <button onClick={() => handleEdit(c)}>Edit</button>
-              <button onClick={() => handleDelete(c.id)}>Delete</button>
-            </div>
-          </div>
-        ))}
+          ))}
       </div>
     </div>
   );
