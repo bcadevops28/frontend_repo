@@ -1,9 +1,28 @@
-- name: SonarCloud Scan
-  uses: SonarSource/sonarcloud-github-action@v2
-  env:
-    SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-  with:
-    args: >
-      -Dsonar.projectKey=vetrii-vs_frontend_repo
-      -Dsonar.organization=vetrii-vs
-      -Dsonar.sources=.
+name: SonarCloud Scan
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  sonarcloud:
+    name: SonarCloud Analysis
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarcloud-github-action@v2
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        with:
+          args: >
+            -Dsonar.projectKey=vetrii-vs_frontend_repo
+            -Dsonar.organization=vetrii-vs
+            -Dsonar.sources=.
