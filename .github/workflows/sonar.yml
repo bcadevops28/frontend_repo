@@ -26,4 +26,8 @@ jobs:
             -Dsonar.projectKey=vetrii-vs_frontend_repo
             -Dsonar.organization=vetrii-vs
             -Dsonar.sources=src
+            -Dsonar.coverage.exclusions=**
+            -Dsonar.javascript.lcov.reportPaths=
+            -Dsonar.typescript.lcov.reportPaths=
+
 
