@@ -9,21 +9,22 @@ function App() {
     defenderName: '',
     offenderName: '',
     caseType: 'NORMAL',
-    status: 'OPEN'
+    caseStatus: 'OPEN'
   });
   const [editingId, setEditingId] = useState(null);
 
-  // ✅ Fetch cases (SAFE)
+  // ✅ Fetch cases
   useEffect(() => {
-
-fetch("http://localhost:8080/api/cases")
-    .then(res => res.json())
+    fetch("https://vetri-demo-backend-ezaeapa7a3cddahr.centralindia-01.azurewebsites.net/")
+      .then(res => {
+        if (!res.ok) throw new Error("Failed to fetch");
+        return res.json();
+      })
       .then(data => {
-        console.log("API response:", data); // 🔍 debug
         if (Array.isArray(data)) {
           setCases(data);
         } else {
-          setCases([]); // prevent crash
+          setCases([]);
         }
       })
       .catch(err => {
@@ -32,44 +33,55 @@ fetch("http://localhost:8080/api/cases")
       });
   }, []);
 
-  // Handle form input
+  // Handle input change
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  // Submit new or updated case
+  // Submit (Add / Update)
   const handleSubmit = (e) => {
     e.preventDefault();
 
     const url = editingId
-      ? `http://localhost:8080/api/cases/${editingId}`
-      : 'http://localhost:8080/api/cases';
+      ? `https://vetri-demo-backend-ezaeapa7a3cddahr.centralindia-01.azurewebsites.net/${editingId}`
+      : 'https://vetri-demo-backend-ezaeapa7a3cddahr.centralindia-01.azurewebsites.net/';
 
     const method = editingId ? 'PUT' : 'POST';
 
     fetch(url, {
-      method,
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(formData)
-    })
-      .then(res => res.json())
-      .then(result => {
-        if (editingId) {
-          setCases(prev =>
-            prev.map(c => (c.id === editingId ? result : c))
-          );
-          setEditingId(null);
-        } else {
-          setCases(prev => [...prev, result]);
-        }
-        resetForm();
-      })
-      .catch(err => console.error("Save error:", err));
+  method: method,
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify(formData)
+})
+  .then(async res => {
+    const text = await res.text();
+    console.log("Status:", res.status);
+    console.log("Response:", text);
+
+    if (!res.ok) {
+      throw new Error(text);
+    }
+
+    return JSON.parse(text);
+  })
+  .then(result => {
+    if (editingId) {
+      setCases(prev =>
+        prev.map(c => (c.id === editingId ? result : c))
+      );
+      setEditingId(null);
+    } else {
+      setCases(prev => [...prev, result]);
+    }
+    resetForm();
+  })
+  .catch(err => console.error("Save error:", err));
+
   };
 
-  // Delete case
+  // Delete
   const handleDelete = (id) => {
-    fetch(`http://localhost:8080/api/cases/${id}`, {
+    fetch(`https://vetri-demo-backend-ezaeapa7a3cddahr.centralindia-01.azurewebsites.net/${id}`, {
       method: 'DELETE'
     })
       .then(() => {
@@ -78,7 +90,7 @@ fetch("http://localhost:8080/api/cases")
       .catch(err => console.error("Delete error:", err));
   };
 
-  // Edit case
+  // Edit
   const handleEdit = (c) => {
     setFormData({
       caseTitle: c.caseTitle,
@@ -86,7 +98,7 @@ fetch("http://localhost:8080/api/cases")
       defenderName: c.defenderName,
       offenderName: c.offenderName,
       caseType: c.caseType,
-      status: c.status
+      caseStatus: c.caseStatus
     });
     setEditingId(c.id);
   };
@@ -99,7 +111,7 @@ fetch("http://localhost:8080/api/cases")
       defenderName: '',
       offenderName: '',
       caseType: 'NORMAL',
-      status: 'OPEN'
+      caseStatus: 'OPEN'
     });
   };
 
@@ -138,13 +150,22 @@ fetch("http://localhost:8080/api/cases")
           onChange={handleChange}
         />
 
-        <select name="caseType" value={formData.caseType} onChange={handleChange}>
+        <select
+          name="caseType"
+          value={formData.caseType}
+          onChange={handleChange}
+        >
           <option value="NORMAL">Normal</option>
           <option value="CRIMINAL">Criminal</option>
         </select>
 
-        <select name="status" value={formData.status} onChange={handleChange}>
+        <select
+          name="caseStatus"
+          value={formData.caseStatus}
+          onChange={handleChange}
+        >
           <option value="OPEN">Open</option>
+          <option value="IN_PROGRESS">In Progress</option>
           <option value="CLOSED">Closed</option>
         </select>
 
@@ -156,28 +177,27 @@ fetch("http://localhost:8080/api/cases")
       <div className="case-list">
         <h2>All Cases</h2>
 
-        {Array.isArray(cases) && cases.length === 0 && (
+        {cases.length === 0 && (
           <p>No cases available</p>
         )}
 
-        {Array.isArray(cases) &&
-          cases.map(c => (
-            <div key={c.id} className="case-card">
-              <div className="case-title">{c.caseTitle}</div>
+        {cases.map(c => (
+          <div key={c.id} className="case-card">
+            <div className="case-title">{c.caseTitle}</div>
 
-              <div className="case-meta">
-                Type: {c.caseType} | Status: {c.status}<br />
-                Defender: {c.defenderName} | Offender: {c.offenderName}
-              </div>
-
-              <p>{c.description}</p>
-
-              <div className="case-actions">
-                <button onClick={() => handleEdit(c)}>Edit</button>
-                <button onClick={() => handleDelete(c.id)}>Delete</button>
-              </div>
+            <div className="case-meta">
+              Type: {c.caseType} | Status: {c.caseStatus}<br />
+              Defender: {c.defenderName} | Offender: {c.offenderName}
             </div>
-          ))}
+
+            <p>{c.description}</p>
+
+            <div className="case-actions">
+              <button onClick={() => handleEdit(c)}>Edit</button>
+              <button onClick={() => handleDelete(c.id)}>Delete</button>
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );
