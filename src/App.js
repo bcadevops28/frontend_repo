@@ -15,7 +15,7 @@ function App() {
 
   // ✅ Fetch cases
   useEffect(() => {
-    fetch("https://vetri-demo-backend-ezaeapa7a3cddahr.centralindia-01.azurewebsites.net/")
+    fetch("https://vetri-demo-backend-ezaeapa7a3cddahr.centralindia-01.azurewebsites.net/api/cases")
       .then(res => {
         if (!res.ok) throw new Error("Failed to fetch");
         return res.json();
@@ -42,10 +42,9 @@ function App() {
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    const url = editingId
-      ? `https://vetri-demo-backend-ezaeapa7a3cddahr.centralindia-01.azurewebsites.net/${editingId}`
-      : 'https://vetri-demo-backend-ezaeapa7a3cddahr.centralindia-01.azurewebsites.net/';
-
+const url = editingId
+  ? `https://vetri-demo-backend-ezaeapa7a3cddahr.centralindia-01.azurewebsites.net/api/cases/${editingId}`
+  : 'https://vetri-demo-backend-ezaeapa7a3cddahr.centralindia-01.azurewebsites.net/api/cases';
     const method = editingId ? 'PUT' : 'POST';
 
     fetch(url, {
@@ -80,8 +79,7 @@ function App() {
   };
 
   // Delete
-  const handleDelete = (id) => {
-    fetch(`https://vetri-demo-backend-ezaeapa7a3cddahr.centralindia-01.azurewebsites.net/${id}`, {
+  fetch(`https://vetri-demo-backend-ezaeapa7a3cddahr.centralindia-01.azurewebsites.net/api/cases/${id}`, {
       method: 'DELETE'
     })
       .then(() => {
