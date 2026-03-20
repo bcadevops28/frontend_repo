@@ -2,9 +2,11 @@ import React, { useState, useEffect } from "react";
 import "./App.css";
 
 // ✅ AUTO SWITCH (LOCAL ↔ AZURE)
-const API = "https://vetri-demo-backend-ezaeapa7a3cddahr.centralindia-01.azurewebsites.net/api/cases";
-
+const API = window.location.hostname === "localhost"
+  ? "http://localhost:8080/api/cases"
+  : "https://vetri-demo-backend-ezaeapa7a3cddahr.centralindia-01.azurewebsites.net/api/cases";
 function App() {
+  
   const [cases, setCases] = useState([]);
   const [loading, setLoading] = useState(false);
 
