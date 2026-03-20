@@ -3,7 +3,7 @@ import "./App.css";
 
 // ✅ AUTO SWITCH (LOCAL ↔ AZURE)
 const API = window.location.hostname === "localhost"
-  ? "http://localhost:8080/api/cases"
+  ? "https://your-backend-url/api/cases"
   : "https://vetri-demo-backend-ezaeapa7a3cddahr.centralindia-01.azurewebsites.net/api/cases";
 function App() {
   
