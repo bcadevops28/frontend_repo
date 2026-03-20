@@ -1,204 +1,252 @@
-import React, { useState, useEffect } from 'react';
-import './style.css';
+import React, { useState, useEffect } from "react";
+import "./App.css";
+
+// ✅ AUTO SWITCH (LOCAL ↔ AZURE)
+const API = "https://vetri-demo-backend-ezaeapa7a3cddahr.centralindia-01.azurewebsites.net/api/cases";
 
 function App() {
   const [cases, setCases] = useState([]);
-  const [formData, setFormData] = useState({
-    caseTitle: '',
-    description: '',
-    defenderName: '',
-    offenderName: '',
-    caseType: 'NORMAL',
-    caseStatus: 'OPEN'
-  });
-  const [editingId, setEditingId] = useState(null);
+  const [loading, setLoading] = useState(false);
 
-  // ✅ Fetch cases
+  const [showModal, setShowModal] = useState(false);
+  const [deleteId, setDeleteId] = useState(null);
+  const [password, setPassword] = useState("");
+
+  const [formData, setFormData] = useState({
+    caseTitle: "",
+    description: "",
+    defenderName: "",
+    offenderName: "",
+    caseStatus: "OPEN",
+    caseType: "CRIMINAL"
+  });
+
   useEffect(() => {
-    fetch("https://vetri-demo-backend-ezaeapa7a3cddahr.centralindia-01.azurewebsites.net/")
-      .then(res => {
-        if (!res.ok) throw new Error("Failed to fetch");
-        return res.json();
-      })
-      .then(data => {
-        if (Array.isArray(data)) {
-          setCases(data);
-        } else {
-          setCases([]);
-        }
-      })
-      .catch(err => {
-        console.error("Fetch error:", err);
-        setCases([]);
-      });
+    fetchCases();
   }, []);
 
-  // Handle input change
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+  // ✅ FETCH CASES
+  const fetchCases = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch(API);
+      const data = await res.json();
+
+      console.log("DATA:", data);
+
+      setCases(data);
+    } catch (err) {
+      console.error(err);
+      alert("❌ Backend not reachable");
+    }
+    setLoading(false);
   };
 
-  // Submit (Add / Update)
-  const handleSubmit = (e) => {
+  // ✅ ADD CASE
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const url = editingId
-      ? `https://vetri-demo-backend-ezaeapa7a3cddahr.centralindia-01.azurewebsites.net/${editingId}`
-      : 'https://vetri-demo-backend-ezaeapa7a3cddahr.centralindia-01.azurewebsites.net/';
+    try {
+      const res = await fetch(API, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(formData)
+      });
 
-    const method = editingId ? 'PUT' : 'POST';
+      const text = await res.text();
+      console.log("ADD RESPONSE:", text);
 
-    fetch(url, {
-  method: method,
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify(formData)
-})
-  .then(async res => {
-    const text = await res.text();
-    console.log("Status:", res.status);
-    console.log("Response:", text);
+      if (!res.ok) {
+        alert("❌ " + text);
+        return;
+      }
 
-    if (!res.ok) {
-      throw new Error(text);
+      alert("✅ Case Added");
+
+      // refresh list
+      await fetchCases();
+
+      // reset form
+      setFormData({
+        caseTitle: "",
+        description: "",
+        defenderName: "",
+        offenderName: "",
+        caseStatus: "OPEN",
+        caseType: "CRIMINAL"
+      });
+
+    } catch (err) {
+      console.error(err);
+      alert("❌ Network Error");
     }
+  };
 
-    return JSON.parse(text);
-  })
-  .then(result => {
-    if (editingId) {
-      setCases(prev =>
-        prev.map(c => (c.id === editingId ? result : c))
-      );
-      setEditingId(null);
-    } else {
-      setCases(prev => [...prev, result]);
+  // ✅ OPEN DELETE MODAL
+  const confirmDelete = (id) => {
+    setDeleteId(id);
+    setShowModal(true);
+  };
+
+  // ✅ DELETE CASE
+  const handleDelete = async () => {
+    try {
+      if (!deleteId) {
+        alert("❌ Invalid ID");
+        return;
+      }
+
+      const res = await fetch(`${API}/${deleteId}?password=${password}`, {
+        method: "DELETE"
+      });
+
+      const text = await res.text();
+      console.log("DELETE RESPONSE:", text);
+
+      if (!res.ok) {
+        alert("❌ " + text);
+        return;
+      }
+
+      alert("🗑️ Case Deleted");
+
+      setShowModal(false);
+      setPassword("");
+
+      // refresh list
+      await fetchCases();
+
+    } catch (err) {
+      console.error(err);
+      alert("❌ Delete Failed");
     }
-    resetForm();
-  })
-  .catch(err => console.error("Save error:", err));
-
-  };
-
-  // Delete
-  const handleDelete = (id) => {
-    fetch(`https://vetri-demo-backend-ezaeapa7a3cddahr.centralindia-01.azurewebsites.net/${id}`, {
-      method: 'DELETE'
-    })
-      .then(() => {
-        setCases(prev => prev.filter(c => c.id !== id));
-      })
-      .catch(err => console.error("Delete error:", err));
-  };
-
-  // Edit
-  const handleEdit = (c) => {
-    setFormData({
-      caseTitle: c.caseTitle,
-      description: c.description,
-      defenderName: c.defenderName,
-      offenderName: c.offenderName,
-      caseType: c.caseType,
-      caseStatus: c.caseStatus
-    });
-    setEditingId(c.id);
-  };
-
-  // Reset form
-  const resetForm = () => {
-    setFormData({
-      caseTitle: '',
-      description: '',
-      defenderName: '',
-      offenderName: '',
-      caseType: 'NORMAL',
-      caseStatus: 'OPEN'
-    });
   };
 
   return (
     <div className="container">
-      <h1>Court Case Management</h1>
 
-      <form onSubmit={handleSubmit}>
+      <h1>⚖️ Court Case System ⚖️</h1>
+
+      <span className="badge">
+        {window.location.hostname === "localhost" ? "💻 Local" : "☁️ Azure"}
+      </span>
+
+      {/* FORM */}
+      <form className="glass" onSubmit={handleSubmit}>
         <input
-          name="caseTitle"
           placeholder="Case Title"
           value={formData.caseTitle}
-          onChange={handleChange}
+          onChange={(e) =>
+            setFormData({ ...formData, caseTitle: e.target.value })
+          }
           required
         />
 
-        <textarea
-          name="description"
+        <input
           placeholder="Description"
           value={formData.description}
-          onChange={handleChange}
+          onChange={(e) =>
+            setFormData({ ...formData, description: e.target.value })
+          }
           required
         />
 
         <input
-          name="defenderName"
-          placeholder="Defender Name"
+          placeholder="Defender"
           value={formData.defenderName}
-          onChange={handleChange}
+          onChange={(e) =>
+            setFormData({ ...formData, defenderName: e.target.value })
+          }
+          required
         />
 
         <input
-          name="offenderName"
-          placeholder="Offender Name"
+          placeholder="Offender"
           value={formData.offenderName}
-          onChange={handleChange}
+          onChange={(e) =>
+            setFormData({ ...formData, offenderName: e.target.value })
+          }
+          required
         />
 
         <select
-          name="caseType"
-          value={formData.caseType}
-          onChange={handleChange}
+          value={formData.caseStatus}
+          onChange={(e) =>
+            setFormData({ ...formData, caseStatus: e.target.value })
+          }
         >
-          <option value="NORMAL">Normal</option>
-          <option value="CRIMINAL">Criminal</option>
+          <option value="OPEN">OPEN</option>
+          <option value="IN_PROGRESS">IN_PROGRESS</option>
+          <option value="CLOSED">CLOSED</option>
         </select>
 
         <select
-          name="caseStatus"
-          value={formData.caseStatus}
-          onChange={handleChange}
+          value={formData.caseType}
+          onChange={(e) =>
+            setFormData({ ...formData, caseType: e.target.value })
+          }
         >
-          <option value="OPEN">Open</option>
-          <option value="IN_PROGRESS">In Progress</option>
-          <option value="CLOSED">Closed</option>
+          <option value="NORMAL">NORMAL</option>
+          <option value="CRIMINAL">CRIMINAL</option>
         </select>
 
-        <button type="submit">
-          {editingId ? "Update Case" : "Add Case"}
-        </button>
+        <button>Add Case</button>
       </form>
 
-      <div className="case-list">
-        <h2>All Cases</h2>
+      {/* LOADING */}
+      {loading && <p className="loading">Loading...</p>}
 
-        {cases.length === 0 && (
-          <p>No cases available</p>
-        )}
+      {/* CASE LIST */}
+      <div className="grid">
+        {cases.length === 0 ? (
+          <p className="empty">No Cases Found</p>
+        ) : (
+          cases.map((c) => (
+            <div key={c.id} className="card">
+              <h3>{c.caseTitle}</h3>
+              <p>{c.description}</p>
 
-        {cases.map(c => (
-          <div key={c.id} className="case-card">
-            <div className="case-title">{c.caseTitle}</div>
+              <div className="tags">
+                <span>{c.caseStatus}</span>
+                <span>{c.caseType}</span>
+              </div>
 
-            <div className="case-meta">
-              Type: {c.caseType} | Status: {c.caseStatus}<br />
-              Defender: {c.defenderName} | Offender: {c.offenderName}
+              <p>
+                <b>{c.defenderName}</b> vs <b>{c.offenderName}</b>
+              </p>
+
+              <button
+                className="delete"
+                onClick={() => confirmDelete(c.id)}
+              >
+                Delete
+              </button>
             </div>
+          ))
+        )}
+      </div>
 
-            <p>{c.description}</p>
+      {/* MODAL */}
+      {showModal && (
+        <div className="modal">
+          <div className="modal-box">
+            <h3>🔐 Enter Password</h3>
 
-            <div className="case-actions">
-              <button onClick={() => handleEdit(c)}>Edit</button>
-              <button onClick={() => handleDelete(c.id)}>Delete</button>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+
+            <div className="modal-btns">
+              <button onClick={handleDelete}>Confirm</button>
+              <button onClick={() => setShowModal(false)}>Cancel</button>
             </div>
           </div>
-        ))}
-      </div>
+        </div>
+      )}
     </div>
   );
 }
