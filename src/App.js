@@ -33,13 +33,11 @@ function App() {
     try {
       const res = await fetch(API);
       const data = await res.json();
-
-      console.log("DATA:", data);
-
       setCases(data);
     } catch (err) {
       console.error(err);
-      alert("❌ Backend not reachable");
+      // Remove alert - just show empty list
+      setCases([]);
     }
     setLoading(false);
   };
