@@ -26,64 +26,50 @@ function App() {
   useEffect(() => {
     fetchCases();
   }, []);
+// ✅ FETCH CASES
+const fetchCases = async () => {
+  setLoading(true);
+  try {
+    const res = await fetch(API);
+    const data = await res.json();
+    setCases(data);
+  } catch (err) {
+    console.error(err);
+    setCases([]);
+  }
+  setLoading(false);
+};
 
-  // ✅ FETCH CASES
-  const fetchCases = async () => {
-    setLoading(true);
-    try {
-      const res = await fetch(API);
-      const data = await res.json();
-      setCases(data);
-    } catch (err) {
-      console.error(err);
-      // Remove alert - just show empty list
-      setCases([]);
+// ✅ ADD CASE
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  try {
+    const res = await fetch(API, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(formData)
+    });
+    const text = await res.text();
+    console.log("ADD RESPONSE:", text);
+    if (!res.ok) {
+      console.error(text);
+      return;
     }
-    setLoading(false);
-  };
-
-  // ✅ ADD CASE
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
-    try {
-      const res = await fetch(API, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(formData)
-      });
-
-      const text = await res.text();
-      console.log("ADD RESPONSE:", text);
-
-      if (!res.ok) {
-        alert("❌ " + text);
-        return;
-      }
-
-      alert("✅ Case Added");
-
-      // refresh list
-      await fetchCases();
-
-      // reset form
-      setFormData({
-        caseTitle: "",
-        description: "",
-        defenderName: "",
-        offenderName: "",
-        caseStatus: "OPEN",
-        caseType: "CRIMINAL"
-      });
-
-    } catch (err) {
-      console.error(err);
-      alert("❌ Network Error");
-    }
-  };
-
+    await fetchCases();
+    setFormData({
+      caseTitle: "",
+      description: "",
+      defenderName: "",
+      offenderName: "",
+      caseStatus: "OPEN",
+      caseType: "CRIMINAL"
+    });
+  } catch (err) {
+    console.error(err);
+  }
+};
   // ✅ OPEN DELETE MODAL
   const confirmDelete = (id) => {
     setDeleteId(id);
