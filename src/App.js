@@ -137,30 +137,35 @@ function App() {
   };
 
   // ✅ DELETE CASE
-  const handleDelete = async () => {
-    try {
-      if (!deleteId) {
-        alert("❌ Invalid ID");
-        return;
-      }
-      const res = await fetch(`${API}/${deleteId}?password=${deletePassword}`, {
-        method: "DELETE"
-      });
-      const text = await res.text();
-      console.log("DELETE RESPONSE:", text);
-      if (!res.ok) {
-        alert("❌ " + text);
-        return;
-      }
-      alert("🗑️ Case Deleted");
-      setShowDeleteModal(false);
-      setDeletePassword("");
-      await fetchCases();
-    } catch (err) {
-      console.error(err);
-      alert("❌ Delete Failed");
+const handleDelete = async () => {
+  try {
+    if (!deleteId) {
+      alert("❌ Invalid ID");
+      return;
     }
-  };
+
+    const res = await fetch(`${API}/delete/${deleteId}?password=${deletePassword}`, {  // ✅ FIXED URL
+      method: "POST"  // ✅ CHANGED from DELETE → POST
+    });
+
+    const text = await res.text();
+    console.log("DELETE RESPONSE:", text);
+
+    if (!res.ok) {
+      alert("❌ " + text);
+      return;
+    }
+
+    alert("🗑️ Case Deleted");
+    setShowDeleteModal(false);
+    setDeletePassword("");
+    await fetchCases();
+
+  } catch (err) {
+    console.error(err);
+    alert("❌ Delete Failed");
+  }
+};
 
   return (
     <div className="container">
