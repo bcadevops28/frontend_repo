@@ -12,12 +12,10 @@ function App() {
   // Delete modal
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleteId, setDeleteId] = useState(null);
-  const [deletePassword, setDeletePassword] = useState("");
 
   // Update modal
   const [showUpdateModal, setShowUpdateModal] = useState(false);
   const [updateId, setUpdateId] = useState(null);
-  const [updatePassword, setUpdatePassword] = useState("");
   const [updateData, setUpdateData] = useState({
     caseTitle: "",
     description: "",
@@ -63,13 +61,15 @@ function App() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData)
       });
-      const text = await res.text();
-      console.log("ADD RESPONSE:", text);
+
       if (!res.ok) {
-        console.error(text);
+        const text = await res.text();
+        alert("❌ " + text);
         return;
       }
+
       await fetchCases();
+
       setFormData({
         caseTitle: "",
         description: "",
@@ -78,6 +78,7 @@ function App() {
         caseStatus: "OPEN",
         caseType: "CRIMINAL"
       });
+
     } catch (err) {
       console.error(err);
     }
@@ -86,49 +87,35 @@ function App() {
   // ✅ OPEN UPDATE MODAL
   const confirmUpdate = (c) => {
     setUpdateId(c.id);
-    setUpdateData({
-      caseTitle: c.caseTitle,
-      description: c.description,
-      defenderName: c.defenderName,
-      offenderName: c.offenderName,
-      caseStatus: c.caseStatus,
-      caseType: c.caseType
-    });
+    setUpdateData({ ...c });
     setShowUpdateModal(true);
   };
 
   // ✅ UPDATE CASE
   const handleUpdate = async () => {
-  try {
-    if (updatePassword !== "admin123") {
-      alert("❌ Invalid Password");
-      return;
+    try {
+      const res = await fetch(`${API}/update/${updateId}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updateData)
+      });
+
+      const text = await res.text();
+
+      if (!res.ok) {
+        alert("❌ " + text);
+        return;
+      }
+
+      alert("✅ Case Updated");
+      setShowUpdateModal(false);
+      await fetchCases();
+
+    } catch (err) {
+      console.error(err);
+      alert("❌ Update Failed");
     }
-
-    const res = await fetch(`${API}/update/${updateId}`, {  // ✅ FIXED URL
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(updateData)
-    });
-
-    const text = await res.text();
-    console.log("UPDATE RESPONSE:", text);
-
-    if (!res.ok) {
-      alert("❌ " + text);
-      return;
-    }
-
-    alert("✅ Case Updated");
-    setShowUpdateModal(false);
-    setUpdatePassword("");
-    await fetchCases();
-
-  } catch (err) {
-    console.error(err);
-    alert("❌ Update Failed");
-  }
-};
+  };
 
   // ✅ OPEN DELETE MODAL
   const confirmDelete = (id) => {
@@ -137,35 +124,28 @@ function App() {
   };
 
   // ✅ DELETE CASE
-const handleDelete = async () => {
-  try {
-    if (!deleteId) {
-      alert("❌ Invalid ID");
-      return;
+  const handleDelete = async () => {
+    try {
+      const res = await fetch(`${API}/delete/${deleteId}`, {
+        method: "POST"
+      });
+
+      const text = await res.text();
+
+      if (!res.ok) {
+        alert("❌ " + text);
+        return;
+      }
+
+      alert("🗑️ Case Deleted");
+      setShowDeleteModal(false);
+      await fetchCases();
+
+    } catch (err) {
+      console.error(err);
+      alert("❌ Delete Failed");
     }
-
-    const res = await fetch(`${API}/delete/${deleteId}?password=${deletePassword}`, {  // ✅ FIXED URL
-      method: "POST"  // ✅ CHANGED from DELETE → POST
-    });
-
-    const text = await res.text();
-    console.log("DELETE RESPONSE:", text);
-
-    if (!res.ok) {
-      alert("❌ " + text);
-      return;
-    }
-
-    alert("🗑️ Case Deleted");
-    setShowDeleteModal(false);
-    setDeletePassword("");
-    await fetchCases();
-
-  } catch (err) {
-    console.error(err);
-    alert("❌ Delete Failed");
-  }
-};
+  };
 
   return (
     <div className="container">
@@ -228,9 +208,7 @@ const handleDelete = async () => {
       {showDeleteModal && (
         <div className="modal">
           <div className="modal-box">
-            <h3>🔐 Enter Password to Delete</h3>
-            <input type="password" value={deletePassword}
-              onChange={(e) => setDeletePassword(e.target.value)} />
+            <h3>Delete this case?</h3>
             <div className="modal-btns">
               <button onClick={handleDelete}>Confirm</button>
               <button onClick={() => setShowDeleteModal(false)}>Cancel</button>
@@ -244,13 +222,13 @@ const handleDelete = async () => {
         <div className="modal">
           <div className="modal-box">
             <h3>✏️ Update Case</h3>
-            <input placeholder="Case Title" value={updateData.caseTitle}
+            <input value={updateData.caseTitle}
               onChange={(e) => setUpdateData({ ...updateData, caseTitle: e.target.value })} />
-            <input placeholder="Description" value={updateData.description}
+            <input value={updateData.description}
               onChange={(e) => setUpdateData({ ...updateData, description: e.target.value })} />
-            <input placeholder="Defender" value={updateData.defenderName}
+            <input value={updateData.defenderName}
               onChange={(e) => setUpdateData({ ...updateData, defenderName: e.target.value })} />
-            <input placeholder="Offender" value={updateData.offenderName}
+            <input value={updateData.offenderName}
               onChange={(e) => setUpdateData({ ...updateData, offenderName: e.target.value })} />
             <select value={updateData.caseStatus}
               onChange={(e) => setUpdateData({ ...updateData, caseStatus: e.target.value })}>
@@ -263,9 +241,6 @@ const handleDelete = async () => {
               <option value="NORMAL">NORMAL</option>
               <option value="CRIMINAL">CRIMINAL</option>
             </select>
-            <h3>🔐 Enter Password</h3>
-            <input type="password" value={updatePassword}
-              onChange={(e) => setUpdatePassword(e.target.value)} />
             <div className="modal-btns">
               <button onClick={handleUpdate}>Update</button>
               <button onClick={() => setShowUpdateModal(false)}>Cancel</button>
