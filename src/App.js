@@ -99,31 +99,36 @@ function App() {
 
   // ✅ UPDATE CASE
   const handleUpdate = async () => {
-    try {
-      if (updatePassword !== "admin123") {
-        alert("❌ Invalid Password");
-        return;
-      }
-      const res = await fetch(`${API}/${updateId}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(updateData)
-      });
-      const text = await res.text();
-      console.log("UPDATE RESPONSE:", text);
-      if (!res.ok) {
-        alert("❌ " + text);
-        return;
-      }
-      alert("✅ Case Updated");
-      setShowUpdateModal(false);
-      setUpdatePassword("");
-      await fetchCases();
-    } catch (err) {
-      console.error(err);
-      alert("❌ Update Failed");
+  try {
+    if (updatePassword !== "admin123") {
+      alert("❌ Invalid Password");
+      return;
     }
-  };
+
+    const res = await fetch(`${API}/update/${updateId}`, {  // ✅ FIXED URL
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(updateData)
+    });
+
+    const text = await res.text();
+    console.log("UPDATE RESPONSE:", text);
+
+    if (!res.ok) {
+      alert("❌ " + text);
+      return;
+    }
+
+    alert("✅ Case Updated");
+    setShowUpdateModal(false);
+    setUpdatePassword("");
+    await fetchCases();
+
+  } catch (err) {
+    console.error(err);
+    alert("❌ Update Failed");
+  }
+};
 
   // ✅ OPEN DELETE MODAL
   const confirmDelete = (id) => {
