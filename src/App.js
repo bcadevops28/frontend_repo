@@ -41,7 +41,7 @@ function App() {
     fetchCases();
   }, []);
 
-  // ✅ FETCH CASES
+  // ✅ FETCH
   const fetchCases = async () => {
     setLoading(true);
     try {
@@ -55,7 +55,7 @@ function App() {
     setLoading(false);
   };
 
-  // ✅ ADD CASE
+  // ✅ ADD
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
@@ -66,7 +66,6 @@ function App() {
       });
 
       const text = await res.text();
-      console.log("ADD RESPONSE:", text);
 
       if (!res.ok) {
         alert("❌ " + text);
@@ -74,6 +73,7 @@ function App() {
       }
 
       await fetchCases();
+
       setFormData({
         caseTitle: "",
         description: "",
@@ -87,7 +87,7 @@ function App() {
     }
   };
 
-  // ✅ OPEN UPDATE MODAL
+  // ✅ OPEN UPDATE
   const confirmUpdate = (c) => {
     setUpdateId(c.id);
     setUpdateData({
@@ -101,116 +101,57 @@ function App() {
     setShowUpdateModal(true);
   };
 
-  // ✅ UPDATE CASE
-{showUpdateModal && (
-  <div className="modal">
-    <div className="modal-box">
-      <h3>✏️ Update Case</h3>
-
-      <input
-        value={updateData.caseTitle}
-        onChange={(e) =>
-          setUpdateData({ ...updateData, caseTitle: e.target.value })
-        }
-      />
-
-      <input
-        value={updateData.description}
-        onChange={(e) =>
-          setUpdateData({ ...updateData, description: e.target.value })
-        }
-      />
-
-      <input
-        value={updateData.defenderName}
-        onChange={(e) =>
-          setUpdateData({
-            ...updateData,
-            defenderName: e.target.value,
-          })
-        }
-      />
-
-      <input
-        value={updateData.offenderName}
-        onChange={(e) =>
-          setUpdateData({
-            ...updateData,
-            offenderName: e.target.value,
-          })
-        }
-      />
-
-      {/* ✅ ADD THIS */}
-      <select
-        value={updateData.caseStatus}
-        onChange={(e) =>
-          setUpdateData({ ...updateData, caseStatus: e.target.value })
-        }
-      >
-        <option value="OPEN">OPEN</option>
-        <option value="IN_PROGRESS">IN_PROGRESS</option>
-        <option value="CLOSED">CLOSED</option>
-      </select>
-
-      {/* ✅ ADD THIS */}
-      <select
-        value={updateData.caseType}
-        onChange={(e) =>
-          setUpdateData({ ...updateData, caseType: e.target.value })
-        }
-      >
-        <option value="NORMAL">NORMAL</option>
-        <option value="CRIMINAL">CRIMINAL</option>
-      </select>
-
-      <h3>🔐 Enter Password</h3>
-      <input
-        type="password"
-        value={updatePassword}
-        onChange={(e) => setUpdatePassword(e.target.value)}
-      />
-
-      <div className="modal-btns">
-        <button onClick={handleUpdate}>Update</button>
-        <button onClick={() => setShowUpdateModal(false)}>
-          Cancel
-        </button>
-      </div>
-    </div>
-  </div>
-)}
-
-  // ✅ OPEN DELETE MODAL
-  const confirmDelete = (id) => {
-    setDeleteId(id);
-    setShowDeleteModal(true);
-  };
-
-  // ✅ DELETE CASE
-  const handleDelete = async () => {
+  // ✅ UPDATE
+  const handleUpdate = async () => {
     try {
-      if (!deleteId) {
-        alert("❌ Invalid ID");
-        return;
-      }
-
       const res = await fetch(
-        `${API}/delete/${deleteId}?password=${deletePassword}`,
+        `${API}/update/${updateId}?password=${updatePassword}`,
         {
           method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(updateData),
         }
       );
 
       const text = await res.text();
-      console.log("DELETE RESPONSE:", text);
 
       if (!res.ok) {
         alert("❌ " + text);
         return;
       }
 
-      alert("🗑️ Case Deleted");
+      alert("✅ Case Updated");
+      setShowUpdateModal(false);
+      setUpdatePassword("");
+      await fetchCases();
+    } catch (err) {
+      console.error(err);
+      alert("❌ Update Failed");
+    }
+  };
+
+  // ✅ OPEN DELETE
+  const confirmDelete = (id) => {
+    setDeleteId(id);
+    setShowDeleteModal(true);
+  };
+
+  // ✅ DELETE
+  const handleDelete = async () => {
+    try {
+      const res = await fetch(
+        `${API}/delete/${deleteId}?password=${deletePassword}`,
+        { method: "POST" }
+      );
+
+      const text = await res.text();
+
+      if (!res.ok) {
+        alert("❌ " + text);
+        return;
+      }
+
+      alert("🗑️ Deleted");
       setShowDeleteModal(false);
       setDeletePassword("");
       await fetchCases();
@@ -223,11 +164,6 @@ function App() {
   return (
     <div className="container">
       <h1>⚖️ Court Case System ⚖️</h1>
-      <span className="badge">
-        {window.location.hostname === "localhost"
-          ? "💻 Local"
-          : "☁️ Azure"}
-      </span>
 
       {/* FORM */}
       <form className="glass" onSubmit={handleSubmit}>
@@ -288,60 +224,34 @@ function App() {
         <button>Add Case</button>
       </form>
 
-      {/* LOADING */}
-      {loading && <p className="loading">Loading...</p>}
-
-      {/* CASE LIST */}
+      {/* LIST */}
       <div className="grid">
-        {cases.length === 0 ? (
-          <p className="empty">No Cases Found</p>
-        ) : (
-          cases.map((c) => (
-            <div key={c.id} className="card">
-              <h3>{c.caseTitle}</h3>
-              <p>{c.description}</p>
-              <div className="tags">
-                <span>{c.caseStatus}</span>
-                <span>{c.caseType}</span>
-              </div>
-              <p>
-                <b>{c.defenderName}</b> vs <b>{c.offenderName}</b>
-              </p>
-              <div className="modal-btns">
-                <button
-                  className="delete"
-                  onClick={() => confirmDelete(c.id)}
-                >
-                  Delete
-                </button>
-                <button
-                  className="update"
-                  onClick={() => confirmUpdate(c)}
-                >
-                  Update
-                </button>
-              </div>
-            </div>
-          ))
-        )}
+        {cases.map((c) => (
+          <div key={c.id} className="card">
+            <h3>{c.caseTitle}</h3>
+            <p>{c.description}</p>
+            <p>{c.caseStatus} | {c.caseType}</p>
+            <p>
+              <b>{c.defenderName}</b> vs <b>{c.offenderName}</b>
+            </p>
+
+            <button onClick={() => confirmDelete(c.id)}>Delete</button>
+            <button onClick={() => confirmUpdate(c)}>Update</button>
+          </div>
+        ))}
       </div>
 
       {/* DELETE MODAL */}
       {showDeleteModal && (
         <div className="modal">
           <div className="modal-box">
-            <h3>🔐 Enter Password to Delete</h3>
+            <h3>Enter Password</h3>
             <input
               type="password"
               value={deletePassword}
               onChange={(e) => setDeletePassword(e.target.value)}
             />
-            <div className="modal-btns">
-              <button onClick={handleDelete}>Confirm</button>
-              <button onClick={() => setShowDeleteModal(false)}>
-                Cancel
-              </button>
-            </div>
+            <button onClick={handleDelete}>Confirm</button>
           </div>
         </div>
       )}
@@ -350,7 +260,7 @@ function App() {
       {showUpdateModal && (
         <div className="modal">
           <div className="modal-box">
-            <h3>✏️ Update Case</h3>
+            <h3>Update Case</h3>
 
             <input
               value={updateData.caseTitle}
@@ -358,12 +268,14 @@ function App() {
                 setUpdateData({ ...updateData, caseTitle: e.target.value })
               }
             />
+
             <input
               value={updateData.description}
               onChange={(e) =>
                 setUpdateData({ ...updateData, description: e.target.value })
               }
             />
+
             <input
               value={updateData.defenderName}
               onChange={(e) =>
@@ -373,6 +285,7 @@ function App() {
                 })
               }
             />
+
             <input
               value={updateData.offenderName}
               onChange={(e) =>
@@ -383,19 +296,42 @@ function App() {
               }
             />
 
-            <h3>🔐 Enter Password</h3>
+            {/* ✅ FIXED */}
+            <select
+              value={updateData.caseStatus}
+              onChange={(e) =>
+                setUpdateData({
+                  ...updateData,
+                  caseStatus: e.target.value,
+                })
+              }
+            >
+              <option value="OPEN">OPEN</option>
+              <option value="IN_PROGRESS">IN_PROGRESS</option>
+              <option value="CLOSED">CLOSED</option>
+            </select>
+
+            <select
+              value={updateData.caseType}
+              onChange={(e) =>
+                setUpdateData({
+                  ...updateData,
+                  caseType: e.target.value,
+                })
+              }
+            >
+              <option value="NORMAL">NORMAL</option>
+              <option value="CRIMINAL">CRIMINAL</option>
+            </select>
+
+            <h3>Password</h3>
             <input
               type="password"
               value={updatePassword}
               onChange={(e) => setUpdatePassword(e.target.value)}
             />
 
-            <div className="modal-btns">
-              <button onClick={handleUpdate}>Update</button>
-              <button onClick={() => setShowUpdateModal(false)}>
-                Cancel
-              </button>
-            </div>
+            <button onClick={handleUpdate}>Update</button>
           </div>
         </div>
       )}
