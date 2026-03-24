@@ -102,36 +102,84 @@ function App() {
   };
 
   // ✅ UPDATE CASE
-  const handleUpdate = async () => {
-    try {
-      if (updatePassword !== "admin123") {
-        alert("❌ Invalid Password");
-        return;
-      }
+{showUpdateModal && (
+  <div className="modal">
+    <div className="modal-box">
+      <h3>✏️ Update Case</h3>
 
-      const res = await fetch(`${API}/update/${updateId}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(updateData),
-      });
+      <input
+        value={updateData.caseTitle}
+        onChange={(e) =>
+          setUpdateData({ ...updateData, caseTitle: e.target.value })
+        }
+      />
 
-      const text = await res.text();
-      console.log("UPDATE RESPONSE:", text);
+      <input
+        value={updateData.description}
+        onChange={(e) =>
+          setUpdateData({ ...updateData, description: e.target.value })
+        }
+      />
 
-      if (!res.ok) {
-        alert("❌ " + text);
-        return;
-      }
+      <input
+        value={updateData.defenderName}
+        onChange={(e) =>
+          setUpdateData({
+            ...updateData,
+            defenderName: e.target.value,
+          })
+        }
+      />
 
-      alert("✅ Case Updated");
-      setShowUpdateModal(false);
-      setUpdatePassword("");
-      await fetchCases();
-    } catch (err) {
-      console.error(err);
-      alert("❌ Update Failed");
-    }
-  };
+      <input
+        value={updateData.offenderName}
+        onChange={(e) =>
+          setUpdateData({
+            ...updateData,
+            offenderName: e.target.value,
+          })
+        }
+      />
+
+      {/* ✅ ADD THIS */}
+      <select
+        value={updateData.caseStatus}
+        onChange={(e) =>
+          setUpdateData({ ...updateData, caseStatus: e.target.value })
+        }
+      >
+        <option value="OPEN">OPEN</option>
+        <option value="IN_PROGRESS">IN_PROGRESS</option>
+        <option value="CLOSED">CLOSED</option>
+      </select>
+
+      {/* ✅ ADD THIS */}
+      <select
+        value={updateData.caseType}
+        onChange={(e) =>
+          setUpdateData({ ...updateData, caseType: e.target.value })
+        }
+      >
+        <option value="NORMAL">NORMAL</option>
+        <option value="CRIMINAL">CRIMINAL</option>
+      </select>
+
+      <h3>🔐 Enter Password</h3>
+      <input
+        type="password"
+        value={updatePassword}
+        onChange={(e) => setUpdatePassword(e.target.value)}
+      />
+
+      <div className="modal-btns">
+        <button onClick={handleUpdate}>Update</button>
+        <button onClick={() => setShowUpdateModal(false)}>
+          Cancel
+        </button>
+      </div>
+    </div>
+  </div>
+)}
 
   // ✅ OPEN DELETE MODAL
   const confirmDelete = (id) => {
