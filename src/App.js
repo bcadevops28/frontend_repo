@@ -41,7 +41,7 @@ function App() {
     fetchCases();
   }, []);
 
-  // ✅ FETCH
+  // ✅ FETCH CASES
   const fetchCases = async () => {
     setLoading(true);
     try {
@@ -55,7 +55,7 @@ function App() {
     setLoading(false);
   };
 
-  // ✅ ADD
+  // ✅ ADD CASE
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
@@ -87,7 +87,7 @@ function App() {
     }
   };
 
-  // ✅ OPEN UPDATE
+  // ✅ OPEN UPDATE MODAL
   const confirmUpdate = (c) => {
     setUpdateId(c.id);
     setUpdateData({
@@ -101,7 +101,7 @@ function App() {
     setShowUpdateModal(true);
   };
 
-  // ✅ UPDATE
+  // ✅ UPDATE CASE
   const handleUpdate = async () => {
     try {
       const res = await fetch(
@@ -130,13 +130,13 @@ function App() {
     }
   };
 
-  // ✅ OPEN DELETE
+  // ✅ OPEN DELETE MODAL
   const confirmDelete = (id) => {
     setDeleteId(id);
     setShowDeleteModal(true);
   };
 
-  // ✅ DELETE
+  // ✅ DELETE CASE
   const handleDelete = async () => {
     try {
       const res = await fetch(
@@ -164,6 +164,9 @@ function App() {
   return (
     <div className="container">
       <h1>⚖️ Court Case System ⚖️</h1>
+
+      {/* ✅ LOADING FIX */}
+      {loading && <p className="loading">Loading...</p>}
 
       {/* FORM */}
       <form className="glass" onSubmit={handleSubmit}>
@@ -224,21 +227,25 @@ function App() {
         <button>Add Case</button>
       </form>
 
-      {/* LIST */}
+      {/* CASE LIST */}
       <div className="grid">
-        {cases.map((c) => (
-          <div key={c.id} className="card">
-            <h3>{c.caseTitle}</h3>
-            <p>{c.description}</p>
-            <p>{c.caseStatus} | {c.caseType}</p>
-            <p>
-              <b>{c.defenderName}</b> vs <b>{c.offenderName}</b>
-            </p>
+        {cases.length === 0 ? (
+          <p>No Cases Found</p>
+        ) : (
+          cases.map((c) => (
+            <div key={c.id} className="card">
+              <h3>{c.caseTitle}</h3>
+              <p>{c.description}</p>
+              <p>{c.caseStatus} | {c.caseType}</p>
+              <p>
+                <b>{c.defenderName}</b> vs <b>{c.offenderName}</b>
+              </p>
 
-            <button onClick={() => confirmDelete(c.id)}>Delete</button>
-            <button onClick={() => confirmUpdate(c)}>Update</button>
-          </div>
-        ))}
+              <button onClick={() => confirmDelete(c.id)}>Delete</button>
+              <button onClick={() => confirmUpdate(c)}>Update</button>
+            </div>
+          ))
+        )}
       </div>
 
       {/* DELETE MODAL */}
@@ -268,14 +275,12 @@ function App() {
                 setUpdateData({ ...updateData, caseTitle: e.target.value })
               }
             />
-
             <input
               value={updateData.description}
               onChange={(e) =>
                 setUpdateData({ ...updateData, description: e.target.value })
               }
             />
-
             <input
               value={updateData.defenderName}
               onChange={(e) =>
@@ -285,7 +290,6 @@ function App() {
                 })
               }
             />
-
             <input
               value={updateData.offenderName}
               onChange={(e) =>
@@ -296,7 +300,6 @@ function App() {
               }
             />
 
-            {/* ✅ FIXED */}
             <select
               value={updateData.caseStatus}
               onChange={(e) =>
